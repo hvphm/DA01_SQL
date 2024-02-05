@@ -10,7 +10,36 @@ SELECT COUNT(*) AS duplicate_companies
 FROM no_duplicates;
 
 -- Ex 2
-
+WITH
+  total_spend_1 AS
+  (
+	SELECT category,
+	       product,
+		     SUM(spend) AS total_spend
+	FROM product_spend
+	WHERE category = 'appliance'
+		AND EXTRACT(year FROM transaction_date) = '2022'
+	GROUP BY product, category
+	ORDER BY total_spend DESC
+	LIMIT 2
+	),
+  total_spend_2 AS
+  (
+	SELECT category,
+		     product,
+		     SUM(spend) AS total_spend
+	FROM product_spend
+	WHERE category = 'electronics'
+		AND EXTRACT(year FROM transaction_date) = '2022'
+	GROUP BY product, category
+	ORDER BY total_spend DESC
+	LIMIT 2
+	)
+SELECT *
+FROM total_spend_1
+UNION ALL
+SELECT *
+FROM total_spend_2;
 
 -- Ex 3
 WITH calls_count AS
@@ -76,6 +105,40 @@ ORDER BY employee_id;
 -- Bài tập bị gắn nhầm link của Exercise 1
 
 -- Ex 11
+SELECT name AS results
+FROM users
+WHERE user_id = (
+    SELECT m1.user_id
+    FROM movierating AS m1
+    JOIN users AS u1 ON m1.user_id = u1.user_id
+    GROUP BY m1.user_id
+    ORDER BY COUNT(m1.rating) DESC, u1.name
+    LIMIT 1)
 
+UNION ALL
+
+SELECT title
+FROM movies
+WHERE movie_id = (
+    SELECT m1.movie_id
+    FROM movierating AS m1
+    JOIN movies AS m2 ON m1.movie_id = m2.movie_id
+    WHERE EXTRACT(YEAR FROM m1.created_at) = 2020
+        AND EXTRACT(MONTH FROM m1.created_at) = 02
+    GROUP BY m1.movie_id
+    ORDER BY AVG(m1.rating) DESC, m2.title
+    LIMIT 1);
 
 -- Ex 12
+WITH main AS
+    (SELECT requester_id AS id
+    FROM requestaccepted
+    UNION ALL
+    SELECT accepter_id AS id
+    FROM requestaccepted)
+
+SELECT id, COUNT(*) AS num
+FROM main
+GROUP BY id
+ORDER BY num DESC
+LIMIT 1;
